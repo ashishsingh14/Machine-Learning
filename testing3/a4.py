@@ -11,6 +11,9 @@ states = ['Alabama', 'Alaska','Arizona','Arkansas','California','Colorado','Conn
               'Utah','Vermont','Virginia','Washington','West Virginia','Wisconsin','Wyoming']
 diseases = ["Alzheimer's disease",'Stroke','CLRD','Diabetes','Influenza and pneumonia','Cancer',"Parkinson's disease",
                 'Pneumonitis due to solids and liquids','Septicemia']
+
+diseases_not_coming = ['Homicide', 'Chronic liver disease and cirrhosis', 'Diseases of Heart', 
+                       'Essential hypertension and hypertensive renal disease','Suicide','Kidney Disease']
 years = [1999,2000,2001,2002,2003,2004,2005,2006,2007,2008,2009,2010,2011,2012,2013]
 num_diseases = [1,2,3,4,5,6,7,8,9]
 
@@ -21,7 +24,24 @@ def generatedata(a,b):
     return data
 
 def plotyearwise():
-    
+    f = open("NCHS_-_Age-adjusted_Death_Rates_for_the_Top_10_Leading_Causes_of_Death__United_States__2013.csv", "r")
+    for i in range(1):
+        for j in range(1):
+            deaths = []
+            for line in f:
+                a = line.split(",")
+                if a[0]==str(years[j]) and a[3]==states[i] and a[2]!='All Causes':
+                    deaths.append(int(a[4]))
+                    name = states[j]  + "-" + str(years[i])
+                    image_name = name + ".png"                    
+            plt.plot(num_diseases, deaths)
+            plt.title(name)
+            plt.savefig(image_name, bbox_inches='tight')
+            plt.clf()
+            print deaths
+            data = generatedata(num_diseases, deaths)
+            meanshift(data)
+            f.seek(0)
 
 def loopingparameters():
     f = open("NCHS_-_Age-adjusted_Death_Rates_for_the_Top_10_Leading_Causes_of_Death__United_States__2013.csv", "r")
@@ -36,10 +56,10 @@ def loopingparameters():
                     deaths.append(int(a[4]))
                     name = states[i] + "-"+ diseases[j]
                     image_name = name + ".png"                    
-                    plt.plot(year, deaths)
-                    plt.title(name)
-                    plt.savefig(image_name, bbox_inches='tight')
-                    plt.clf()
+            plt.plot(year, deaths)
+            plt.title(name)
+            plt.savefig(image_name, bbox_inches='tight')
+            plt.clf()
             print year 
             print deaths
             data = generatedata(year, deaths)
@@ -80,7 +100,7 @@ def plotin3d():
         plt.show()"""  
     
 if __name__=="__main__":
-    loopingparameters()
+    plotyearwise()
 
 
 
