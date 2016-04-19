@@ -54,7 +54,10 @@ def converttocsv2():
 
 
 if __name__=="__main__":            
-    converttocsv2()
+    a = '122'
+    b = '133'
+    c = float(a + '.' +  b)
+    print type(c)
 
 
 

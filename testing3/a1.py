@@ -106,8 +106,7 @@ def dbscan():
         
     pyplot.show()"""
 
-def meanshift():
-    data = generatedata()
+def meanshift(data):
     ms = cluster.MeanShift()
     ms.fit(data)
     labels = ms.labels_
@@ -123,12 +122,13 @@ def meanshift():
         pyplot.plot(data[i][0], data[i][1],colors[labels[i]], markersize = 10)
     pyplot.scatter(cluster_centers[:, 0],cluster_centers[:, 1], marker = "x", s=150, linewidths = 5, zorder = 10)
     pyplot.show()
-    
+    pyplot.clf()
     
 
     
 if __name__ == "__main__":
-    meanshift()
+    data = generatedata()
+    meanshift(data) 
     
     
     
