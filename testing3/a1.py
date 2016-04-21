@@ -6,7 +6,8 @@ import matplotlib.dates as mdates
 from datetime import datetime
 from math import sqrt
 import pandas as pd
-alpha = 0.001
+from operator import itemgetter
+
 def formatcsvfile():
     #converters={0:mdates.strpdate2num('%b-%d-%Y')}
     days = np.genfromtxt("sample1.csv", dtype=None, delimiter=',', unpack=True, usecols=(0,), skip_header=1)
@@ -121,13 +122,12 @@ def calculateeuclideandistance(x1,y1,x2,y2):
     distance = sqrt( (x1-x2)**2 + (y1-y2)**2)
     return distance
         
-
 def calculatedistance(centers, data, labels):
     distance = []
     for i in xrange(len(data)):
         d = calculateeuclideandistance(data[i][0], data[i][1], centers[labels[i]][0], centers[labels[i]][1])
         distance.append(d)
-    calculatethresholdvalue1(centers, data, labels, distance)
+    #calculatethresholdvalue1(centers, data, labels, distance)
     return distance
         
 def testingdata():
@@ -136,7 +136,7 @@ def testingdata():
     data = np.column_stack((np.asarray(x), np.asarray(y)))
     return data
 
-def calculatethresholdvalue1(centers, data, labels, distance):
+def calculatethresholdvalue1(data, labels, distance):
     labels_unique = np.unique(labels)
     n_clusters_ = len(labels_unique)
     total_points = len(data)
@@ -150,46 +150,67 @@ def calculatethresholdvalue1(centers, data, labels, distance):
     threshold = 0
     for i in xrange(n_clusters_):
         threshold = threshold + distance_per_cluster[i]*points_per_cluster[i]
-    threshold = threshold/total_points
+    threshold = float(threshold/total_points)
     return threshold
 
-def calculatenearestpoint(centers, data, labels, distance):
+def calculatenearestpoint(data, labels, distance):
     labels_unique = np.unique(labels)
     n_clusters_ = len(labels_unique)
-    nearest_point_per_cluster = [99999999 for x in range(n_clusters_)]
+    nearest_point_per_cluster = [9999999999 for x in range(n_clusters_)]
     for i in xrange(len(data)):
         nearest_point_per_cluster[labels[i]] = min(distance[i], nearest_point_per_cluster[labels[i]])
     
     return nearest_point_per_cluster
 
-def calculatethresholdvalue2(centers, data, labels, distance):
+def markoutliers2(data, labels, distance,alpha):
     labels_unique = np.unique(labels)
     n_clusters_ = len(labels_unique)
     total_points = len(data)    
     outliers = [0 for x in range(total_points)]
-    nearest_point_per_cluster = calculatenearestpoint(centers, data, labels, distance)
+    nearest_point_per_cluster = calculatenearestpoint(data, labels, distance)
     for i in xrange(len(data)):
-        if (nearest_point_per_cluster[labels[i]]/distance[i]) < alpha:
-            outliers[i] = 1
+        if distance[i]==0:
+            continue
+        else:
+            if float(nearest_point_per_cluster[labels[i]]/distance[i]) > alpha:
+                outliers[i] = 1
+    return outliers
+
+def markoutliers3(data, labels, distance, min_points):
+    labels_unique = np.unique(labels)
+    n_clusters_ = len(labels_unique)
+    total_points = len(data)
+    points_per_cluster = [0 for x in range(n_clusters_)]
+    for i in xrange(len(data)):
+        points_per_cluster[labels[i]] = points_per_cluster[labels[i]] + 1
+    outliers = [0 for x in range(total_points)]
+    
+    for i in xrange(n_clusters_):
+        if points_per_cluster[i]<min_points:
+                continue
+        else:
+            each_cluster = []
+            for j in xrange(total_points):
+                temp = []
+                if labels[j]==i:
+                    temp.append(distance[j])
+                    temp.append(j)
+                    each_cluster.append(temp)
+            sorted_per_cluster = sorted(each_cluster, key=itemgetter(0),reverse=True)
+            print sorted_per_cluster
+            for l in xrange(min_points):
+                outliers[sorted_per_cluster[l][1]] = 1
     return outliers
 
 
-def markoutliers(centers, data, labels, distance):
-    """
-    #first method
-    outliers = calculatethresholdvalue2(centers, data, labels, distance)
-    mark them in the figure
-    """
-    
-    """
+def markoutliers1(data, labels, distance,threshold):
     #second method
     total_points = len(data)    
     outliers = [0 for x in range(total_points)]
-    threshold = calculatethresholdvalue1(centers, data, labels, distance)
     for i in xrange(len(data)):
         if (distance[i]>threshold):
             outliers[i] = 1
-    """
+    return outliers
        
 def meanshift(data):
     ms = cluster.MeanShift()
@@ -199,19 +220,31 @@ def meanshift(data):
     labels_unique = np.unique(labels)
     n_clusters_ = len(labels_unique)
     print ("Number of unique clusters are: %d", n_clusters_)
-    colors = 10*["g.","r.","c.","y.","b.","m.","k.","w."]
+    colors = 10*["g.","r.","c.","y.","b.","m.","w."]
     print labels
-    """
+    
     for i in xrange(len(cluster_centers)):
         print cluster_centers[i][0], cluster_centers[i][1]
         print "\n"
-        """
-    print calculatedistance(cluster_centers, data, labels)
     
-    
+    distance = calculatedistance(cluster_centers, data, labels)
+    print distance
+    #threshold = calculatethresholdvalue1(data, labels, distance)
+    #print threshold
+    """
+    alpha = 0.0001
+    while alpha<0.1:
+        outliers = markoutliers2(data, labels, distance, alpha)
+        alpha = alpha + 0.0002
+        print outliers"""
+    outliers = markoutliers3(data, labels, distance, 3)
+    print "outliers: ", outliers
     for i in range(len(data)):
         #print ("coordinates :", data[i], "label:" , labels[i])
-        pyplot.plot(data[i][0], data[i][1],colors[labels[i]], markersize = 10)
+        if outliers[i]==1:
+            pyplot.plot(data[i][0], data[i][1],"k.", markersize = 20)
+        else :
+            pyplot.plot(data[i][0], data[i][1],colors[labels[i]], markersize = 10)
     pyplot.scatter(cluster_centers[:, 0],cluster_centers[:, 1], marker = "x", s=150, linewidths = 5, zorder = 10)
     pyplot.show()
     pyplot.clf()
@@ -219,7 +252,11 @@ def meanshift(data):
     
 if __name__ == "__main__":
     data = testingdata()
-    meanshift(data) 
+    meanshift(data)
+    """
+    a = [[2,4],[5,8],[999,1]]
+    b = sorted(a, key=itemgetter(0), reverse=True)
+    print b"""
     
     
     

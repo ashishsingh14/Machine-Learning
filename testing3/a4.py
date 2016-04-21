@@ -43,7 +43,7 @@ def plotyearwise():
             meanshift(data)
             f.seek(0)
 
-def loopingparameters():
+def plotdiseasesforallyear():
     f = open("NCHS_-_Age-adjusted_Death_Rates_for_the_Top_10_Leading_Causes_of_Death__United_States__2013.csv", "r")
     for i in range(1):
         for j in range(1):
@@ -100,7 +100,7 @@ def plotin3d():
         plt.show()"""  
     
 if __name__=="__main__":
-    plotyearwise()
+    plotdiseasesforallyear()
 
 
 
