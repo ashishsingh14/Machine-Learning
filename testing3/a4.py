@@ -100,7 +100,7 @@ def plotin3d():
         plt.show()"""  
     
 if __name__=="__main__":
-    plotdiseasesforallyear()
+    plotyearwise()
 
 
 
